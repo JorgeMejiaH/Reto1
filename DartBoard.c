@@ -32,8 +32,8 @@ int main(int argc, char *argv[]){
     }
     double Pi_aprox = 4.0 * hits / total_throws;
 
-     clock_gettime(CLOCK_MONOTONIC, &end);
-     elapsed_time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    elapsed_time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
 
     if(verbose){
         printf("Pi aprox: %lf\n", Pi_aprox);
