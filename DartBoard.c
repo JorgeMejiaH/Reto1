@@ -7,7 +7,7 @@
 int main(int argc, char *argv[]){
     struct timespec start, end;
     double elapsed_time;
-    long k, total_throws, hits;
+    double k, total_throws, hits;
     const double factor = 1.0 / RAND_MAX;
     total_throws = atoi(argv[1]);
     int verbose = 0;
