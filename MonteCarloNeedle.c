@@ -3,25 +3,29 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
+#include <pthread.h>
 
-double estimate_pi(long total_drops, double needle_length, double line_spacing) {
-    long crosses = 0;
+typedef struct {
+    double total_drops_per_thread;
+    double needle_length;
+    double line_spacing;
+    double crosses;
+} ThreadData;
 
-    for (long i = 0; i < total_drops; i++) {
-        double x = (double)rand() / RAND_MAX;  // Posición del extremo de la aguja [0, 1]
-        double angle = (double)rand() / RAND_MAX * M_PI;  // Ángulo entre la aguja y las líneas [0, π/2]
+void *thread_estimate_pi(void *arg) {
+    ThreadData *data = (ThreadData *)arg;
+    data->crosses = 0;
 
-        if (x <= needle_length * 0.5 * cos(angle)) {
-            crosses++;
+    for (double i = 0; i < data->total_drops_per_thread; i++) {
+        double x = (double)rand() / RAND_MAX;  
+        double angle = (double)rand() / RAND_MAX * M_PI;  
+
+        if (x <= data->needle_length * 0.5 * cos(angle)) {
+            data->crosses++;
         }
     }
 
-    // Calcular la probabilidad de cruce
-    double probability = (double)crosses / total_drops;
-
-    // Estimar π
-    double pi_estimate = ((2 * needle_length) / (probability * line_spacing)) / 2;
-    return pi_estimate;
+    pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[]) {
@@ -29,18 +33,39 @@ int main(int argc, char *argv[]) {
 
     struct timespec start, end;
     double elapsed_time;
-    long total_drops = atoi(argv[1]);  // Número total de lanzamientos de la aguja
+    double total_drops = atoi(argv[1]);  // Número total de lanzamientos de la aguja
     double needle_length = 1.0;  // Longitud de la aguja
     double line_spacing = 2.0;   // Espaciado entre las líneas
     int verbose = 0;
+    int Num_Thread = atoi(argv[2]);
 
-    if (argc > 2 && strcmp(argv[2], "-v") == 0) {//comando verbose
+    if (argc > 3 && strcmp(argv[3], "-v") == 0) {//comando verbose
         verbose = 1;
     }
 
     clock_gettime(CLOCK_MONOTONIC, &start); //Inicia Captura del tiempo
 
-    double pi_estimate = estimate_pi(total_drops, needle_length, line_spacing);
+    pthread_t threads[Num_Thread];
+    ThreadData thread_data[Num_Thread];
+
+    double total_drops_per_thread = total_drops / Num_Thread;
+
+    for (int i = 0; i < Num_Thread; i++) {
+        thread_data[i].total_drops_per_thread = total_drops_per_thread;
+        thread_data[i].needle_length = needle_length;
+        thread_data[i].line_spacing = line_spacing;
+
+        pthread_create(&threads[i], NULL, thread_estimate_pi, (void *)&thread_data[i]);
+    }
+
+    double total_crosses = 0;
+
+    for (int i = 0; i < Num_Thread; i++) {
+        pthread_join(threads[i], NULL);
+        total_crosses += thread_data[i].crosses;
+    }
+
+    double pi_estimate = ((2 * needle_length) / ((total_crosses / total_drops) * line_spacing)) / 2;
 
     if(verbose){
             printf("%lf\n", pi_estimate);
