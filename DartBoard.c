@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
+#include <pthread.h>
 
 int main(int argc, char *argv[]){
     struct timespec start, end;
