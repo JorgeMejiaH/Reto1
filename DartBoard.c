@@ -14,15 +14,18 @@ typedef struct { //Estructura para definir los valores de cada hilo
 void *throw_darts(void *arg) {
     ThreadResult *result = (ThreadResult *)arg;
     const double factor = 1.0 / RAND_MAX;
+    const double total_throws = result->total_throws;
+    double hits = 0;
 
-    for (double k = 0; k < result->total_throws; k++) {
+    for (double k = 0; k < total_throws; k++) {
         double x_axis = rand() * factor;
         double y_axis = rand() * factor;
-        if (x_axis * x_axis + y_axis * y_axis < 1) { // Dentro del círculo
-            result->hits++;
+        if (x_axis * x_axis + y_axis * y_axis < 1) {
+            hits++;
         }
     }
 
+    result->hits = hits;
     pthread_exit(NULL);
 }
 
@@ -49,20 +52,15 @@ int main(int argc, char *argv[]){
 
     // Crear hilos y lanzar dardos
     for (int i = 0; i < Num_Threads; i++) {
-        thread_results[i].hits = 0;
         thread_results[i].total_throws = total_throws / Num_Threads;
 
         pthread_create(&threads[i], NULL, throw_darts, (void *)&thread_results[i]);
     }
 
+    double total_hits = 0;
     // Esperar a que los hilos terminen
     for (int i = 0; i < Num_Threads; i++) {
         pthread_join(threads[i], NULL);
-    }
-
-    // Calcular la aproximación de π
-    double total_hits = 0;
-    for (int i = 0; i < Num_Threads; i++) {
         total_hits += thread_results[i].hits;
     }
 
