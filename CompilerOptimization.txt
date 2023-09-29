@@ -1,1 +1,0 @@
-gcc -o DartBoardloop DartBoard.c -faggressive-loop-optimizations
